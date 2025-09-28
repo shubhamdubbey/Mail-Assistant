@@ -113,6 +113,21 @@ function createInfoBox(onGenerate) {
   styleButton(generateBtn);
   generateBtn.style.alignSelf = "flex-end";
 
+  // Disable generate button initially
+  generateBtn.disabled = true;
+  generateBtn.style.opacity = 0.5;
+
+  // Enable generate button only when textarea has content
+  textarea.addEventListener('input', () => {
+    if (textarea.value.trim().length > 0) {
+      generateBtn.disabled = false;
+      generateBtn.style.opacity = 1;
+    } else {
+      generateBtn.disabled = true;
+      generateBtn.style.opacity = 0.5;
+    }
+  });
+
   generateBtn.addEventListener('click', () => {
     const info = textarea.value.trim();
     const selectedTone = toneSelect.value;
