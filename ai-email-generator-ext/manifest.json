@@ -1,0 +1,29 @@
+{
+    "name": "Mail-Reply-Generator",
+    "description": "Extension to reply your mail with the help of AI.",
+    "version": "1.0",
+    "manifest_version": 3,
+    "actions": {
+        "default_title": "Email Writer Assistant"
+    },
+    "permissions": [
+      "activeTab",
+      "storage "
+    ],
+    "host_permissions": [
+      "http://localhost:8081/*",
+      "*://mail.google.com/*"
+    ],
+    "content_scripts":[
+        {
+            "js":["content.js"],
+            "matches": ["*://mail.google.com/*"],
+            "css": ["content.css"],
+            "run_at":"document_end"
+        }
+    ],
+    "background": {
+      "service_worker": "content.js"
+    }
+    
+  }
