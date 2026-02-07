@@ -3,8 +3,6 @@ package com.email.generator.service;
 import com.email.generator.dto.EmailRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -28,19 +26,17 @@ public class EmailGeneratorServiceImpl implements EmailGeneratorService {
 
     @Override
     public String generateEmail(EmailRequest emailRequest) {
-        // Build the prompt
+
         String prompt = buildPrompt(emailRequest);
 
-        // Craft request
         Map<String, Object> requestBody = Map.of(
-                "contents", new Object[] {
-                        Map.of("parts", new Object[] {
+                "contents", new Object[]{
+                        Map.of("parts", new Object[]{
                                 Map.of("text", prompt)
                         })
                 }
         );
 
-        // Send request
         String response = webClient.post()
                 .uri(geminiApiUrl + geminiApiKey)
                 .header("Content-Type", "application/json")
@@ -49,12 +45,11 @@ public class EmailGeneratorServiceImpl implements EmailGeneratorService {
                 .bodyToMono(String.class)
                 .block();
 
-        // Return response
         return extractResponseContent(response);
     }
 
     private String extractResponseContent(String response) {
-        try{
+        try {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode rootNode = objectMapper.readTree(response);
             return rootNode.path("candidates")
@@ -64,20 +59,18 @@ public class EmailGeneratorServiceImpl implements EmailGeneratorService {
                     .get(0)
                     .path("text")
                     .asText();
-
-        } catch(Exception e){
-            return "Error processing response" + e.getMessage();
+        } catch (Exception e) {
+            return "Error processing response: " + e.getMessage();
         }
     }
 
     private String buildPrompt(EmailRequest emailRequest) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("Generate a professional email reply for the following email content. Don't generate th subject line.");
-        if(emailRequest.getTone() != null && !emailRequest.getTone().isEmpty()) {
+        prompt.append("Generate a professional email reply for the following email content. Don't generate the subject line.");
+        if (emailRequest.getTone() != null && !emailRequest.getTone().isEmpty()) {
             prompt.append(" Use ").append(emailRequest.getTone()).append(" tone.");
         }
-        prompt.append("\nOriginal Email : \n").append(emailRequest.getEmailContent());
-
+        prompt.append("\nOriginal Email:\n").append(emailRequest.getEmailContent());
         return prompt.toString();
     }
 }
