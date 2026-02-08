@@ -1,12 +1,18 @@
 package com.email.generator.service;
 
 import com.email.generator.dto.EmailRequest;
+import com.email.generator.entity.EmailPromptHistory;
+import com.email.generator.repository.EmailPromptHistoryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Instant;
 import java.util.Map;
 
 @Service
@@ -18,6 +24,12 @@ public class EmailGeneratorServiceImpl implements EmailGeneratorService {
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
+    @Autowired
+    private EmailPromptHistoryRepository repository;
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(EmailGeneratorServiceImpl.class);
+
     private final WebClient webClient;
 
     public EmailGeneratorServiceImpl(WebClient webClient) {
@@ -28,6 +40,7 @@ public class EmailGeneratorServiceImpl implements EmailGeneratorService {
     public String generateEmail(EmailRequest emailRequest) {
 
         String prompt = buildPrompt(emailRequest);
+        logger.info("Here is the prompt in line 41: " + prompt);
 
         Map<String, Object> requestBody = Map.of(
                 "contents", new Object[]{
@@ -37,6 +50,8 @@ public class EmailGeneratorServiceImpl implements EmailGeneratorService {
                 }
         );
 
+        logger.info("Here is the requestBody for gemini in line 51: " + requestBody);
+
         String response = webClient.post()
                 .uri(geminiApiUrl + geminiApiKey)
                 .header("Content-Type", "application/json")
@@ -45,7 +60,17 @@ public class EmailGeneratorServiceImpl implements EmailGeneratorService {
                 .bodyToMono(String.class)
                 .block();
 
-        return extractResponseContent(response);
+        logger.info("Here is the response from gemini in line 61: " + response);
+
+        String extractedResponse = extractResponseContent(response);
+
+        logger.info("Here is the extracted response in line 65: " + extractedResponse);
+
+        repository.save(
+                new EmailPromptHistory(prompt, extractedResponse, Instant.now())
+        );
+        logger.info("After saving to repository. " + prompt);
+        return extractedResponse;
     }
 
     private String extractResponseContent(String response) {
