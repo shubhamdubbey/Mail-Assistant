@@ -1,4 +1,4 @@
-package function;
+package com.email.generator.function;
 
 import com.email.generator.dto.EmailRequest;
 import com.email.generator.service.EmailGeneratorService;
