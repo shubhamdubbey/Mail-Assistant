@@ -1,6 +1,7 @@
 package com.email.generator.service;
 
 import com.email.generator.dto.EmailRequest;
+import com.email.generator.dto.PromptHistoryResponse;
 import com.email.generator.entity.EmailPromptHistory;
 import com.email.generator.repository.EmailPromptHistoryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class EmailGeneratorServiceImpl implements EmailGeneratorService {
@@ -71,6 +74,12 @@ public class EmailGeneratorServiceImpl implements EmailGeneratorService {
         );
         logger.info("After saving to repository. " + prompt);
         return extractedResponse;
+    }
+
+    @Override
+    public List<PromptHistoryResponse> getPromptHistoryResponse() {
+        List<EmailPromptHistory> list = repository.findAll();
+        return list.stream().map(x -> new PromptHistoryResponse(x.getId(), x.getPrompt(), x.getResponse(), x.getCreatedAt())).collect(Collectors.toList());
     }
 
     private String extractResponseContent(String response) {
